@@ -7,13 +7,13 @@ const schema = {
     apiKey: {
       doc: 'Mailgun API key to be used for email notifications. Will be overridden by a `notifications.apiKey` parameter in the site config, if one is set.',
       format: String,
-      default: null,
+      default: '',
       env: 'EMAIL_API_KEY'
     },
     domain: {
       doc: 'Domain to be used with Mailgun for email notifications. Will be overridden by a `notifications.domain` parameter in the site config, if one is set.',
       format: String,
-      default: null,
+      default: '',
       env: 'EMAIL_DOMAIN'
     },
     fromAddress: {

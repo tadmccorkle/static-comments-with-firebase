@@ -3,15 +3,6 @@
 const convict = require('convict');
 
 const schema = {
-  analytics: {
-    uaTrackingId: {
-      doc: 'Universal Analytics account ID.',
-      docExample: 'uaTrackingId: "UA-XXXX-XX"',
-      format: String,
-      default: null,
-      env: 'UA_TRACKING_ID'
-    }
-  },
   email: {
     apiKey: {
       doc: 'Mailgun API key to be used for email notifications. Will be overridden by a `notifications.apiKey` parameter in the site config, if one is set.',
@@ -22,7 +13,7 @@ const schema = {
     domain: {
       doc: 'Domain to be used with Mailgun for email notifications. Will be overridden by a `notifications.domain` parameter in the site config, if one is set.',
       format: String,
-      default: 'tadmccorkle.com',
+      default: null,
       env: 'EMAIL_DOMAIN'
     },
     fromAddress: {

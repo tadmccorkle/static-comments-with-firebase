@@ -67,5 +67,5 @@ node_modules/
 # other
 config.json
 config.*.json
-key.pem
+*.pem
 package-lock.json

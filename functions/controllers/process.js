@@ -1,8 +1,8 @@
+/* eslint-disable consistent-return */
 /* eslint-disable promise/always-return */
 'use strict';
 
 const reCaptcha = require('express-recaptcha');
-const universalAnalytics = require('universal-analytics');
 
 const CommentBot = require('./../lib/CommentBot');
 const config = require('./../config');
@@ -58,9 +58,6 @@ function createConfigObject (property) {
 }
 
 function process (commentBot, request, response) {
-  const ua = config.get('analytics.uaTrackingId')
-    ? universalAnalytics(config.get('analytics.uaTrackingId'))
-    : null;
   const fields = request.query.fields || request.body.fields;
   const options = request.query.options || request.body.options || {};
 
@@ -69,10 +66,6 @@ function process (commentBot, request, response) {
       redirect: data.redirect,
       fields: data.fields
     });
-
-    if (ua) {
-      ua.event('Entries', 'New entry').send();
-    }
   });
 }
 

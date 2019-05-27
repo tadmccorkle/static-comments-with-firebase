@@ -30,7 +30,7 @@ const API = function () {
 
 API.prototype.initializeWebhookHandler = function () {
   const webhookHandler = GithubWebHook({
-    path: '/v1/webhook'
+    path: '/webhook'
   });
 
   webhookHandler.on('pull_request', this.controllers.handlePullRequest);

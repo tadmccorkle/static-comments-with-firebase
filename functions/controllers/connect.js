@@ -9,10 +9,6 @@ const GitHub = require('./../lib/GitHub');
 const config = require('./../config');
 
 module.exports = (request, response) => {
-  const ua = config.get('analytics.uaTrackingId')
-    ? require('universal-analytics')(config.get('analytics.uaTrackingId'))
-    : null;
-
   const github = new GitHub({
     username: request.params.username,
     repository: request.params.repository,
@@ -39,16 +35,8 @@ module.exports = (request, response) => {
       invitation_id: invitationId
     }).then(response => {
       response.send('OK!');
-
-      if (ua) {
-        ua.event('Repositories', 'Connect').send();
-      }
     }).catch(error => {
       response.status(500).send('Error');
-
-      if (ua) {
-        ua.event('Repositories', 'Connect error').send();
-      }
     });
   });
 };

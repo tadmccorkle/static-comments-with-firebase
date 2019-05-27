@@ -7,10 +7,6 @@ const GitHub = require('./../lib/GitHub');
 const config = require('./../config');
 
 module.exports = (repo, data) => {
-  const ua = config.get('analytics.uaTrackingId')
-    ? require('universal-analytics')(config.get('analytics.uaTrackingId'))
-    : null;
-
   if (!data.number) {
     return;
   }
@@ -49,17 +45,9 @@ module.exports = (repo, data) => {
 
     return github.deleteBranch(review.sourceBranch);
   }).then(response => {
-    if (ua) {
-      ua.event('Hooks', 'Delete branch').send();
-    }
-
     return response;
   }).catch(error => {
     console.log(error.stack || error);
-
-    if (ua) {
-      ua.event('Hooks', 'Delete branch error').send();
-    }
 
     return Promise.reject(error);
   });

@@ -83,7 +83,7 @@ const schema = {
     fromAddress: {
       doc: 'Email address used to send notifications.',
       format: String,
-      default: 'tad@mg.tadmccorkle.com',
+      default: '',
       env: 'EMAIL_FROM'
     }
   },

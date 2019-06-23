@@ -40,7 +40,8 @@ SubscriptionsManager.prototype.send = function (entryId, fields, options, siteCo
       const notifications = new Notification(this.mailAgent);
 
       return notifications.send(list, fields, options, {
-        siteName: siteConfig.get('name')
+        siteName: siteConfig.get('name'),
+        fromAddress: siteConfig.get('notifications.fromAddress')
       });
     }
     return null;

@@ -19,7 +19,7 @@ const schema = {
     fromAddress: {
       doc: 'Email address used to send notifications. Will be overridden by a `notifications.fromAddress` parameter in the site config, if one is set.',
       format: String,
-      default: 'tad@mg.tadmccorkle.com',
+      default: 'no_reply@mailgun.com',
       env: 'EMAIL_FROM'
     }
   },

@@ -24,10 +24,12 @@ Notification.prototype._buildMessage = function (fields, options, data) {
 
 Notification.prototype.send = function (to, fields, options, data) {
   const subject = data.siteName ? `New reply on "${data.siteName}"` : 'New reply';
+  const fromAddress = data.fromAddress !== '' ? data.fromAddress : config.get('email.fromAddress');
 
   return new Promise((resolve, reject) => {
+
     this.mailAgent.messages().send({
-      from: `Comment Bot <${config.get('email.fromAddress')}>`,
+      from: `Comment Bot <${fromAddress}>`,
       to,
       subject,
       html: this._buildMessage(fields, options, data)

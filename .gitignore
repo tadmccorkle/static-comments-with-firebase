@@ -69,3 +69,4 @@ config.json
 config.*.json
 *.pem
 package-lock.json
+tokens-and-keys.txt

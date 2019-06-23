@@ -1,4 +1,3 @@
-/* eslint-disable promise/no-nesting */
 'use strict';
 
 const Mailgun = require('mailgun-js');
@@ -11,32 +10,32 @@ const uuidv1 = require('uuid/v1');
 const yaml = require('js-yaml');
 
 const GitHub = require('./GitHub');
-const RSA = require('./RSA');
 const SiteConfig = require('./../siteConfig');
 const SubscriptionsManager = require('./SubscriptionsManager');
 const Transforms = require('./Transforms');
 const config = require('./../config');
-const errorHandler = require('./ErrorHandler');
 
 const CommentBot = function (parameters) {
   this.parameters = parameters;
-
-  const {
-    branch,
-    repository,
-    username
-  } = parameters;
+  this.username = parameters.username;
+  this.repository = parameters.repository;
+  this.branch = parameters.branch;
+  this.property = parameters.property;
 
   this.git = new GitHub({
-    branch,
-    repository,
-    username
+    username: this.username,
+    repository: this.repository,
+    branch: this.branch
   });
 
   this.uid = uuidv1();
 
-  this.rsa = new NodeRSA();
-  this.rsa.importKey(config.get('rsaPrivateKey'));
+  this.rsa = new NodeRSA(config.get('rsaPrivateKey'));
+};
+
+CommentBot.prototype.logAndGetError = function (message) {
+  console.error('Error:', message);
+  return new Error(message);
 };
 
 CommentBot.prototype._transforms = Transforms;
@@ -70,11 +69,6 @@ CommentBot.prototype._applyGeneratedFields = function (data) {
         case 'date':
           data[field] = this._createDate(options);
           break;
-        case 'user':
-          if (this.gitUser && typeof options.property === 'string') {
-            data[field] = objectPath.get(this.gitUser, options.property);
-          }
-          break;
         case 'slugify':
           if (
             typeof options.field === 'string' &&
@@ -90,6 +84,22 @@ CommentBot.prototype._applyGeneratedFields = function (data) {
   });
 
   return data;
+};
+
+CommentBot.prototype._createDate = function (options) {
+  options = options || {};
+
+  const date = new Date();
+
+  switch (options.format) {
+    case 'timestamp':
+      return date.getTime();
+    case 'timestamp-seconds':
+      return Math.floor(date.getTime() / 1000);
+    case 'iso8601':
+    default:
+      return date.toISOString();
+  }
 };
 
 CommentBot.prototype._applyTransforms = function (fields) {
@@ -114,48 +124,6 @@ CommentBot.prototype._applyTransforms = function (fields) {
   return Promise.resolve(fields);
 };
 
-CommentBot.prototype._checkAuth = function () {
-  if (!this.siteConfig.get('auth.required')) {
-    return Promise.resolve(false);
-  }
-
-  if (!this.options['auth-token']) {
-    return Promise.reject(errorHandler('AUTH_TOKEN_MISSING'));
-  }
-
-  const oauthToken = RSA.decrypt(this.options['auth-token']);
-
-  if (!oauthToken) {
-    return Promise.reject(errorHandler('AUTH_TOKEN_INVALID'));
-  }
-
-  const git = new GitHub({
-    oauthToken
-  });
-
-  return git.getCurrentUser().then(user => {
-    this.gitUser = user;
-
-    return true;
-  });
-};
-
-CommentBot.prototype._createDate = function (options) {
-  options = options || {};
-
-  const date = new Date();
-
-  switch (options.format) {
-    case 'timestamp':
-      return date.getTime();
-    case 'timestamp-seconds':
-      return Math.floor(date.getTime() / 1000);
-    case 'iso8601':
-    default:
-      return date.toISOString();
-  }
-};
-
 CommentBot.prototype._createFile = function (fields) {
   return new Promise((resolve, reject) => {
     switch (this.siteConfig.get('format').toLowerCase()) {
@@ -168,6 +136,7 @@ CommentBot.prototype._createFile = function (fields) {
 
           return resolve(output);
         } catch (error) {
+          console.error('Error creating yml file:', error.message);
           return reject(error);
         }
       case 'frontmatter': {
@@ -178,7 +147,7 @@ CommentBot.prototype._createFile = function (fields) {
         });
 
         if (!contentField) {
-          return reject(errorHandler('NO_FRONTMATTER_CONTENT_TRANSFORM'));
+          return reject(this.logAndGetError('Frontmatter error.'));
         }
 
         const content = fields[contentField];
@@ -191,11 +160,13 @@ CommentBot.prototype._createFile = function (fields) {
 
           return resolve(output);
         } catch (error) {
+          console.error('Frontmatter yml error:', error.message);
           return reject(error);
         }
       }
-      default:
-        return reject(errorHandler('INVALID_FORMAT'));
+      default: {
+        return reject(this.logAndGetError('Invalid file creation format.'));
+      }
     }
   });
 };
@@ -264,17 +235,6 @@ CommentBot.prototype._getExtensionForFormat = function (format) {
   }
 };
 
-CommentBot.prototype._initializeSubscriptions = function () {
-  if (!this.siteConfig.get('notifications.enabled')) return null;
-
-  const mailgun = Mailgun({
-    apiKey: this.siteConfig.get('notifications.apiKey') || config.get('email.apiKey'),
-    domain: this.siteConfig.get('notifications.domain') || config.get('email.domain')
-  });
-
-  return new SubscriptionsManager(this.parameters, this.git, mailgun);
-};
-
 CommentBot.prototype._resolvePlaceholders = function (subject, baseObject) {
   const matches = subject.match(/{(.*?)}/g);
 
@@ -282,7 +242,7 @@ CommentBot.prototype._resolvePlaceholders = function (subject, baseObject) {
     return subject;
   }
 
-  matches.forEach((match) => {
+  matches.forEach(match => {
     const escapedMatch = match.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
     const property = match.slice(1, -1);
 
@@ -313,9 +273,20 @@ CommentBot.prototype._resolvePlaceholders = function (subject, baseObject) {
   return subject;
 };
 
+CommentBot.prototype._initializeSubscriptions = function () {
+  if (!this.siteConfig.get('notifications.enabled')) return null;
+
+  const mailgun = Mailgun({
+    apiKey: this.siteConfig.get('notifications.apiKey') || config.get('email.apiKey'),
+    domain: this.siteConfig.get('notifications.domain') || config.get('email.domain')
+  });
+
+  return new SubscriptionsManager(this.parameters, this.git, mailgun);
+};
+
 CommentBot.prototype._validateConfig = function (config) {
   if (!config) {
-    return errorHandler('MISSING_CONFIG_BLOCK');
+    return this.logAndGetError('Missing config.');
   }
 
   const requiredFields = [
@@ -334,9 +305,7 @@ CommentBot.prototype._validateConfig = function (config) {
   });
 
   if (missingFields.length) {
-    return errorHandler('MISSING_CONFIG_FIELDS', {
-      data: missingFields
-    });
+    return this.logAndGetError(`Missing fields - ${missingFields}`);
   }
 
   this.siteConfig = SiteConfig(config, this.rsa);
@@ -365,15 +334,11 @@ CommentBot.prototype._validateFields = function (fields) {
   });
 
   if (missingRequiredFields.length) {
-    return errorHandler('MISSING_REQUIRED_FIELDS', {
-      data: missingRequiredFields
-    });
+    return this.logAndGetError(`Missing required fields - ${missingRequiredFields}`);
   }
 
   if (invalidFields.length) {
-    return errorHandler('INVALID_FIELDS', {
-      data: invalidFields
-    });
+    return this.logAndGetError(`Invalid fields - ${invalidFields}`);
   }
 
   return null;
@@ -393,7 +358,7 @@ CommentBot.prototype.getSiteConfig = function (force) {
   }
 
   if (!this.configPath) {
-    return Promise.reject(errorHandler('NO_CONFIG_PATH'));
+    return this.logAndGetError('No config path.');
   }
 
   return this.git.readFile(this.configPath.file).then(data => {
@@ -405,7 +370,7 @@ CommentBot.prototype.getSiteConfig = function (force) {
     }
 
     if (config.branch !== this.parameters.branch) {
-      return Promise.reject(errorHandler('BRANCH_MISMATCH'));
+      return Promise.reject(this.logAndGetError('Branch mismatch.'));
     }
 
     return this.siteConfig;
@@ -416,11 +381,7 @@ CommentBot.prototype.processEntry = function (fields, options) {
   this.fields = Object.assign({}, fields);
   this.options = Object.assign({}, options);
 
-  this._initializeGit;
-
-  return this.getSiteConfig().then(config => {
-    return this._checkAuth();
-  }).then(fields => {
+  return this.getSiteConfig().then(() => {
     const fieldErrors = this._validateFields(fields);
 
     if (fieldErrors) {
@@ -443,8 +404,9 @@ CommentBot.prototype.processEntry = function (fields, options) {
     });
 
     if (subscriptions && options.parent && options.subscribe && this.fields[options.subscribe]) {
+      // eslint-disable-next-line promise/no-nesting
       subscriptions.set(options.parent, this.fields[options.subscribe]).catch(error => {
-        console.log(error.stack || error);
+        console.error('Error setting subscriptions:', error.message);
       });
     }
 
@@ -468,16 +430,14 @@ CommentBot.prototype.processEntry = function (fields, options) {
       this.parameters.branch,
       commitMessage
     );
-  }).then(result => {
+  }).then(() => {
     return {
       fields: fields,
       redirect: options.redirect ? options.redirect : false
     };
   }).catch(error => {
-    return Promise.reject(errorHandler('ERROR_PROCESSING_ENTRY', {
-      error,
-      instance: this
-    }));
+    console.error('Error processing entry:', error.message);
+    return Promise.reject(error);
   });
 };
 
@@ -485,15 +445,13 @@ CommentBot.prototype.processMerge = function (fields, options) {
   this.fields = Object.assign({}, fields);
   this.options = Object.assign({}, options);
 
-  return this.getSiteConfig().then(config => {
+  return this.getSiteConfig().then(() => {
     const subscriptions = this._initializeSubscriptions();
 
     return subscriptions.send(options.parent, fields, options, this.siteConfig);
   }).catch(error => {
-    return Promise.reject(errorHandler('ERROR_PROCESSING_MERGE', {
-      error,
-      instance: this
-    }));
+    console.error('Error processing merge:', error.message);
+    return Promise.reject(error);
   });
 };
 
@@ -508,14 +466,6 @@ CommentBot.prototype.setConfigPath = function (configPath) {
   }
 
   this.configPath = configPath;
-};
-
-CommentBot.prototype.setIp = function (ip) {
-  this.ip = ip;
-};
-
-CommentBot.prototype.setUserAgent = function (userAgent) {
-  this.userAgent = userAgent;
 };
 
 module.exports = CommentBot;

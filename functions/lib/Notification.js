@@ -12,7 +12,7 @@ Notification.prototype._buildMessage = function (fields, options, data) {
     <body>
       Dear human,<br>
       <br>
-      Someone replied to a comment you subscribed to${data.siteName ? ` on <strong>${data.siteName}</strong>` : ''}.
+      Someone commented on a post you subscribed to${data.siteName ? ` on <strong>${data.siteName}</strong>` : ''}.
       <br><br>
       ${options.origin ? `<a href="${options.origin}">Click here</a> to see it.` : ''} If you do not wish to receive any further notifications for this thread, <a href="%mailing_list_unsubscribe_url%">click here</a>.
       <br><br>

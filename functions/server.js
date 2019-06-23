@@ -16,9 +16,7 @@ const API = function () {
 
   this.controllers = {
     home: require('./controllers/home'),
-    connect: require('./controllers/connect'),
     encrypt: require('./controllers/encrypt'),
-    auth: require('./controllers/auth'),
     handlePullRequest: require('./controllers/handlePullRequest'),
     process: require('./controllers/process')
   };
@@ -29,8 +27,24 @@ const API = function () {
 };
 
 API.prototype.initializeWebhookHandler = function () {
-  const webhookHandler = GithubWebHook({
-    path: '/webhook'
+  let webhookHandler;
+  const webhookSecret = config.get('webhookSecret');
+  
+  if (webhookSecret !== '') {
+    webhookHandler = GithubWebHook({
+      path: '/webhook',
+      secret: webhookSecret
+    });
+  } else {
+    webhookHandler = GithubWebHook({
+      path: '/webhook'
+    });
+  }
+
+  webhookHandler.on('error', error => {
+    if (error.message !== 'No signature found in the request') {
+      console.error('Webhook error:', error.message);
+    }
   });
 
   webhookHandler.on('pull_request', this.controllers.handlePullRequest);
@@ -54,18 +68,8 @@ API.prototype.initializeRoutes = function () {
   );
 
   this.server.get(
-    '/connect/:username/:repository',
-    this.controllers.connect
-  );
-
-  this.server.get(
     '/encrypt/:text',
     this.controllers.encrypt
-  );
-
-  this.server.get(
-    '/auth/:username/:repository/:branch/:property',
-    this.controllers.auth
   );
 
   this.server.post(

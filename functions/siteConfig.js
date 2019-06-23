@@ -53,23 +53,6 @@ const schema = {
     format: Object,
     default: {}
   },
-  githubAuth: {
-    clientId: {
-      doc: 'The client ID to the GitHub Application used for GitHub OAuth.',
-      format: 'EncryptedString',
-      default: null
-    },
-    clientSecret: {
-      doc: 'The client secret to the GitHub Application used for GitHub OAuth.',
-      format: 'EncryptedString',
-      default: null
-    },
-    redirectUri: {
-      doc: 'The URL to redirect to after authenticating with GitHub.',
-      format: String,
-      default: ''
-    }
-  },
   moderation: {
     doc: 'When set to `true`, a pull request with the data files will be created to allow site administrators to approve or reject an entry. Otherwise, entries will be pushed to `branch` immediately.',
     format: Boolean,
@@ -96,6 +79,12 @@ const schema = {
       doc: 'Mailgun domain',
       format: 'EncryptedString',
       default: null
+    },
+    fromAddress: {
+      doc: 'Email address used to send notifications.',
+      format: String,
+      default: 'tad@mg.tadmccorkle.com',
+      env: 'EMAIL_FROM'
     }
   },
   path: {
@@ -136,6 +125,25 @@ const schema = {
       default: ''
     }
   }
+
+  // not used with current implementation - may be used in future
+  // githubAuth: {
+  //   clientId: {
+  //     doc: 'The client ID to the GitHub Application used for GitHub OAuth.',
+  //     format: 'EncryptedString',
+  //     default: null
+  //   },
+  //   clientSecret: {
+  //     doc: 'The client secret to the GitHub Application used for GitHub OAuth.',
+  //     format: 'EncryptedString',
+  //     default: null
+  //   },
+  //   redirectUri: {
+  //     doc: 'The URL to redirect to after authenticating with GitHub.',
+  //     format: String,
+  //     default: ''
+  //   }
+  // }
 };
 
 module.exports = (data, rsa) => {
@@ -153,8 +161,9 @@ module.exports = (data, rsa) => {
     config.load(data);
     config.validate();
     return config;
-  } catch (e) {
-    throw e;
+  } catch (error) {
+    console.error('Error loading site config file:', error.message);
+    return null;
   }
 };
 

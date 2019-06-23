@@ -1,10 +1,7 @@
-/* eslint-disable promise/no-nesting */
-/* eslint-disable consistent-return */
 'use strict';
 
 const CommentBot = require('./../lib/CommentBot');
 const GitHub = require('./../lib/GitHub');
-const config = require('./../config');
 
 module.exports = (repo, data) => {
   if (!data.number) {
@@ -13,11 +10,11 @@ module.exports = (repo, data) => {
 
   const github = new GitHub({
     username: data.repository.owner.login,
-    repository: data.repository.name,
-    token: config.get('githubToken')
+    repository: repo
   });
 
-  return github.getReview(data.number).then((review) => {
+  // eslint-disable-next-line consistent-return
+  return github.getReview(data.number).then(review => {
     if (review.sourceBranch.indexOf('comment-bot_')) {
       return null;
     }
@@ -35,20 +32,19 @@ module.exports = (repo, data) => {
           const commentBot = new CommentBot(parsedBody.parameters);
 
           commentBot.setConfigPath(parsedBody.configPath);
+          // eslint-disable-next-line promise/no-nesting
           commentBot.processMerge(parsedBody.fields, parsedBody.options)
             .catch(error => Promise.reject(error));
         } catch (error) {
+          console.error('Error processing merge:', error.message);
           return Promise.reject(error);
         }
       }
     }
 
     return github.deleteBranch(review.sourceBranch);
-  }).then(response => {
-    return response;
   }).catch(error => {
-    console.log(error.stack || error);
-
+    console.error('Error getting review:', error.message);
     return Promise.reject(error);
   });
 };

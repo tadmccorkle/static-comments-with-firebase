@@ -1,6 +1,3 @@
-/* eslint-disable consistent-return */
-/* eslint-disable promise/always-return */
-/* eslint-disable promise/no-nesting */
 'use strict';
 
 const md5 = require('md5');
@@ -46,6 +43,7 @@ SubscriptionsManager.prototype.send = function (entryId, fields, options, siteCo
         siteName: siteConfig.get('name')
       });
     }
+    return null;
   });
 };
 
@@ -70,8 +68,9 @@ SubscriptionsManager.prototype.set = function (entryId, email) {
         }));
       }
 
+      // eslint-disable-next-line promise/no-nesting
       return Promise.all(queue).then(() => {
-        this.mailAgent.lists(listAddress).members().create({
+        return this.mailAgent.lists(listAddress).members().create({
           address: email
         }, (error, result) => {
           if (error && (error.statusCode !== 400)) {

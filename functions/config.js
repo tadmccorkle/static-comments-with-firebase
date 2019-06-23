@@ -17,7 +17,7 @@ const schema = {
       env: 'EMAIL_DOMAIN'
     },
     fromAddress: {
-      doc: 'Email address to send notifications from. Will be overridden by a `notifications.fromAddress` parameter in the site config, if one is set.',
+      doc: 'Email address used to send notifications. Will be overridden by a `notifications.fromAddress` parameter in the site config, if one is set.',
       format: String,
       default: 'tad@mg.tadmccorkle.com',
       env: 'EMAIL_FROM'
@@ -26,20 +26,8 @@ const schema = {
   env: {
     doc: 'The applicaton environment.',
     format: ['production', 'development', 'test'],
-    default: 'development',
+    default: 'production',
     env: 'NODE_ENV'
-  },
-  githubAccessTokenUri: {
-    doc: 'URI for the GitHub authentication provider.',
-    format: String,
-    default: 'https://github.com/login/oauth/access_token',
-    env: 'GITHUB_ACCESS_TOKEN_URI'
-  },
-  githubAppID: {
-    doc: 'ID of the GitHub App.',
-    format: String,
-    default: null,
-    env: 'GITHUB_APP_ID'
   },
   githubBaseUrl: {
     doc: 'Base URL for the GitHub API.',
@@ -47,25 +35,48 @@ const schema = {
     default: 'https://api.github.com',
     env: 'GITHUB_BASE_URL'
   },
-  githubPrivateKey: {
-    doc: 'Private key for the GitHub App.',
-    format: String,
-    default: null,
-    env: 'GITHUB_PRIVATE_KEY'
-  },
-  githubToken: {
-    doc: 'Access token to the GitHub account (legacy)',
-    format: String,
-    default: null,
-    env: 'GITHUB_TOKEN'
-  },
   rsaPrivateKey: {
-    doc: 'RSA private key to encrypt sensitive configuration parameters with.',
+    doc: 'RSA private key to encrypt sensitive configuration parameters.',
     docExample: 'rsaPrivateKey: "-----BEGIN RSA PRIVATE KEY-----\\nkey\\n-----END RSA PRIVATE KEY-----"',
     format: String,
     default: null,
     env: 'RSA_PRIVATE_KEY'
+  },
+  webhookSecret: {
+    doc: 'Secret used to validate GitHub webhook. Use to ensure webhooks are from the expected repo.',
+    docExample: 'webhookSecret: "totallysecret"',
+    format: String,
+    default: '',
+    env: 'WEBHOOK_SECRET'
+  },
+
+  // remove if updated to no longer use personal access token
+  githubToken: {
+    doc: 'Access token to the GitHub account.',
+    format: String,
+    default: null,
+    env: 'GITHUB_TOKEN'
   }
+
+  // not used with current implementation - may be used in future
+  // githubAppID: {
+  //   doc: 'ID of the GitHub App.',
+  //   format: String,
+  //   default: null,
+  //   env: 'GITHUB_APP_ID'
+  // },
+  // githubPrivateKey: {
+  //   doc: 'Private key of the GitHub App.',
+  //   format: String,
+  //   default: null,
+  //   env: 'GITHUB_PRIVATE_KEY'
+  // },
+  // githubAccessTokenUri: {
+  //   doc: 'URI for the GitHub authentication provider.',
+  //   format: String,
+  //   default: 'https://github.com/login/oauth/access_token',
+  //   env: 'GITHUB_ACCESS_TOKEN_URI'
+  // }
 };
 
 let config;
@@ -74,11 +85,8 @@ try {
   config = convict(schema);
   config.loadFile('./config.' + config.get('env') + '.json');
   config.validate();
-
-  console.log('(*) Local config file loaded');
-} catch (e) {
-  console.log(e);
-  console.log('ERROR loading local config file.');
+} catch (error) {
+  console.error('Error loading local config file:', error.message);
 }
 
 module.exports = config;

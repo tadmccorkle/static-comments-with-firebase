@@ -1,12 +1,8 @@
-/* eslint-disable consistent-return */
-/* eslint-disable promise/always-return */
 'use strict';
 
-const reCaptcha = require('express-recaptcha');
+const Recaptcha = require('express-recaptcha').RecaptchaV2;
 
 const CommentBot = require('./../lib/CommentBot');
-const config = require('./../config');
-const errorHandler = require('./../lib/ErrorHandler');
 
 function checkRecaptcha (commentBot, request) {
   return new Promise((resolve, reject) => {
@@ -18,7 +14,7 @@ function checkRecaptcha (commentBot, request) {
       const reCaptchaOptions = request.body.options && request.body.options.reCaptcha;
 
       if (!reCaptchaOptions || !reCaptchaOptions.siteKey || !reCaptchaOptions.secret) {
-        return reject(errorHandler('RECAPTCHA_MISSING_CREDENTIALS'));
+        return reject(commentBot.logAndGetError('Missing recaptcha credentials.'));
       }
 
       let decryptedSecret;
@@ -26,25 +22,32 @@ function checkRecaptcha (commentBot, request) {
       try {
         decryptedSecret = commentBot.decrypt(reCaptchaOptions.secret);
       } catch (error) {
-        return reject(errorHandler('RECAPTCHA_CONFIG_MISMATCH'));
+        console.error('Recaptcha decryption error:', error.message);
+        return reject(error);
       }
 
       if (
         reCaptchaOptions.siteKey !== siteConfig.get('reCaptcha.siteKey') ||
         decryptedSecret !== siteConfig.get('reCaptcha.secret')
       ) {
-        return reject(errorHandler('RECAPTCHA_CONFIG_MISMATCH'));
+        return reject(commentBot.logAndGetError('Recaptcha mismatch.'));
       }
 
-      reCaptcha.init(reCaptchaOptions.siteKey, decryptedSecret);
+      const reCaptcha = new Recaptcha(reCaptchaOptions.siteKey, decryptedSecret);
       reCaptcha.verify(request, error => {
         if (error) {
-          return reject(errorHandler(error));
+          console.error('Recaptcha verification error:', error.message);
+          return reject(error);
         }
 
         return resolve(true);
       });
-    }).catch(error => reject(error));
+
+      return null;
+    }).catch(error => {
+      console.error('Recaptcha error:', error.message);
+      reject(error);
+    });
   });
 }
 
@@ -62,7 +65,7 @@ function process (commentBot, request, response) {
   const options = request.query.options || request.body.options || {};
 
   return commentBot.processEntry(fields, options).then(data => {
-    sendResponse(response, {
+    return sendResponse(response, {
       redirect: data.redirect,
       fields: data.fields
     });
@@ -85,12 +88,9 @@ function sendResponse (response, data) {
     success: !error
   };
 
-  if (error && error._smErrorCode) {
-    const errorCode = errorHandler.getInstance().getErrorCode(error._smErrorCode);
-    const errorMessage = errorHandler.getInstance().getMessage(error._smErrorCode);
-
-    if (errorMessage) {
-      payload.message = errorMessage;
+  if (error) {
+    if (error.message) {
+      payload.message = error.message;
     }
 
     if (error.data) {
@@ -100,24 +100,20 @@ function sendResponse (response, data) {
     if (error) {
       payload.rawError = error;
     }
-
-    payload.errorCode = errorCode;
   } else {
     payload.fields = data.fields;
   }
 
-  response.status(statusCode).send(payload);
+  return response.status(statusCode).send(payload);
 }
 
 module.exports = (request, response, next) => {
   const commentBot = new CommentBot(request.params);
 
   commentBot.setConfigPath();
-  commentBot.setIp(request.headers['x-forwarded-for'] || request.connection.remoteAddress);
-  commentBot.setUserAgent(request.headers['user-agent']);
 
   return checkRecaptcha(commentBot, request)
-    .then(usedRecaptcha => process(commentBot, request, response))
+    .then(() => process(commentBot, request, response))
     .catch(error => sendResponse(response, {
       error: error,
       redirect: request.body.options && request.body.options.redirect,

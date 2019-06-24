@@ -32,7 +32,9 @@ Then, generate an RSA private key:
 
 You'll need to replace all returns with new line characters (`\n`), so your private key should be of the form:
 
-`-----BEGIN RSA PRIVATE KEY-----\nFIRST_LINE_OF_PRIVATE_KEY\nSECOND-LINE_OF_PRIVATE_KEY\n...\nFINAL_LINE_OF_PRIVATE_KEY\n-----END RSA PRIVATE KEY-----`
+```txt
+-----BEGIN RSA PRIVATE KEY-----\nFIRST_LINE_OF_PRIVATE_KEY\nSECOND-LINE_OF_PRIVATE_KEY\n...\nFINAL_LINE_OF_PRIVATE_KEY\n-----END RSA PRIVATE KEY-----
+```
 
 Create a personal access token on GitHub if you don't already have one you can use - this can be done [here](https://github.com/settings/tokens). It must have the 'repo' scope.
 

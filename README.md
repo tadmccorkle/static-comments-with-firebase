@@ -103,7 +103,7 @@ Done! You should now be able to POST comments to *YOUR_FIREBASE_APP/entry/GITHUB
 
 ## Helpful Resources
 
-See the following for help with Staticman/CommentBot:
+See the following for help with Staticman/Comment Bot:
 
 - [Staticman source](https://github.com/eduardoboucas/staticman)
 - [Staticman site](https://staticman.net/)

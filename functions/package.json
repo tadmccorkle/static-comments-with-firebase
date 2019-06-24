@@ -1,6 +1,6 @@
 {
-  "name": "tadmccorkle-comments",
-  "description": "Comments for tadmccorkle.com - Firebase Staticman implementation",
+  "name": "comment-bot",
+  "description": "Static site comments with Node.js - Firebase Staticman implementation",
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",

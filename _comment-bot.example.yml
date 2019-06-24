@@ -1,0 +1,46 @@
+# (*): Required
+# (!): Encrypted - YOUR_FIREBASE_APP_URL/encrypt/{TEXT TO BE ENCRYPTED}
+
+comments:
+  allowedFields: ["name", "email", "message"] # *
+  requiredFields: ["name", "message"]
+
+  branch: "master" # *
+  commitMessage: "New comment."
+  path: "_data/comments/{options.slug}" # *
+  filename: "comment-{@timestamp}" # *
+  format: "yaml"
+  moderation: true
+
+  # List of fields to be populated automatically by Comment Bot and included in
+  # the data file. Keys are the name of the field. The value can be an object
+  # with a `type` property, which configures the generated field, or any value
+  # to be used directly (e.g. a string, number or array)
+  generatedFields:
+    date:
+      type: date
+      options:
+        format: "iso8601"
+
+  # Name of the site. Used in notification emails.
+  name: "YOUR_SITE.com"
+
+  allowedOrigins: ["YOUR_SITE.com"]
+  notifications:
+    enabled: true
+
+    # Mailgun API key
+    apiKey: "YOUR_ENCRYPTED_API_KEY" # !
+
+    # Mailgun domain
+    domain: "YOUR_ENCRYPTED_DOMAIN" # !
+
+    fromAddress: YOU@YOUR.DOMAIN
+
+  transforms:
+    email: md5
+
+  reCaptcha:
+    enabled: true
+    siteKey: "YOUR_SITE_KEY"
+    secret: "YOUR_ENCRYPTED_SECRET" # !

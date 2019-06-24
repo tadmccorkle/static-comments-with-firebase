@@ -48,7 +48,7 @@ After completing each step above, create a file called _config.production.json_ 
 }
 ```
 
-The webhookSecret is optional - set it up if you want to ensure the requests to your webhook URL are valid (see the next section, GitHub Pages Implementation for more information). Remove it from the configuration file if you are not using it. If you want to test out development configurations without modifying your production configuration, just be sure to set your environment variable, `NODE_ENV`, appropriately.
+The webhookSecret is optional - set it up if you want to ensure the requests to your webhook URL are valid (see the next section, GitHub Pages Implementation, for more information). Remove it from the configuration file if you are not using it. If you want to test out development configurations without modifying your production configuration, just be sure to set your environment variable, `NODE_ENV`, appropriately.
 
 If you haven't done so yet, install _firebase-tools_:
 

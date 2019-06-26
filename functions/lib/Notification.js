@@ -6,7 +6,7 @@ const Notification = function (mailAgent) {
   this.mailAgent = mailAgent;
 };
 
-Notification.prototype._buildMessage = function (fields, options, data) {
+Notification.prototype._buildMessage = function (options, data) {
   return `
   <html>
     <body>
@@ -14,7 +14,7 @@ Notification.prototype._buildMessage = function (fields, options, data) {
       <br>
       Someone commented on a post you subscribed to${data.siteName ? ` on <strong>${data.siteName}</strong>` : ''}.
       <br><br>
-      ${options.origin ? `<a href="${options.origin}">Click here</a> to see it.` : ''} If you do not wish to receive any further notifications for this thread, <a href="%mailing_list_unsubscribe_url%">click here</a>.
+      ${options.origin ? `<a href="${options.origin}${data.commentSectionID ? `#${data.commentSectionID}` : ''}">Click here</a> to see it.` : ''} If you do not wish to receive any further notifications for this thread, <a href="%mailing_list_unsubscribe_url%">click here</a>.
       <br><br>
       -Comment Bot
     </body>
@@ -22,9 +22,9 @@ Notification.prototype._buildMessage = function (fields, options, data) {
   `;
 };
 
-Notification.prototype.send = function (to, fields, options, data) {
+Notification.prototype.send = function (to, options, data) {
   const subject = data.siteName ? `New reply on "${data.siteName}"` : 'New reply';
-  const fromAddress = data.fromAddress !== '' ? data.fromAddress : config.get('email.fromAddress');
+  const fromAddress = data.fromAddress ? data.fromAddress : config.get('email.fromAddress');
 
   return new Promise((resolve, reject) => {
 
@@ -32,7 +32,7 @@ Notification.prototype.send = function (to, fields, options, data) {
       from: `Comment Bot <${fromAddress}>`,
       to,
       subject,
-      html: this._buildMessage(fields, options, data)
+      html: this._buildMessage(options, data)
     }, (error, response) => {
       if (error) {
         return reject(error);

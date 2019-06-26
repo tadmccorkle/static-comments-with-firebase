@@ -421,7 +421,7 @@ CommentBot.prototype.processEntry = function (fields, options) {
         this._generateReviewBody(fields)
       );
     } else if (subscriptions && options.parent) {
-      subscriptions.send(options.parent, fields, options, this.siteConfig);
+      subscriptions.send(options.parent, options, this.siteConfig);
     }
 
     return this.git.writeFile(
@@ -448,7 +448,7 @@ CommentBot.prototype.processMerge = function (fields, options) {
   return this.getSiteConfig().then(() => {
     const subscriptions = this._initializeSubscriptions();
 
-    return subscriptions.send(options.parent, fields, options, this.siteConfig);
+    return subscriptions.send(options.parent, options, this.siteConfig);
   }).catch(error => {
     console.error('Error processing merge:', error.message);
     return Promise.reject(error);

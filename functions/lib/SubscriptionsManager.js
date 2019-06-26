@@ -34,14 +34,15 @@ SubscriptionsManager.prototype._get = function (entryId) {
   });
 };
 
-SubscriptionsManager.prototype.send = function (entryId, fields, options, siteConfig) {
+SubscriptionsManager.prototype.send = function (entryId, options, siteConfig) {
   return this._get(entryId).then(list => {
     if (list) {
       const notifications = new Notification(this.mailAgent);
 
-      return notifications.send(list, fields, options, {
-        siteName: siteConfig.get('name'),
-        fromAddress: siteConfig.get('notifications.fromAddress')
+      return notifications.send(list, options, {
+        siteName: siteConfig.get('notifications.name'),
+        fromAddress: siteConfig.get('notifications.fromAddress'),
+        commentSectionID: siteConfig.get('notifications.commentSectionID')
       });
     }
     return null;

@@ -73,7 +73,7 @@ function process (commentBot, request, response) {
 }
 
 function sendResponse (response, data) {
-  const error = data && data.err;
+  const error = data && data.error;
   const statusCode = error ? 500 : 200;
 
   if (!error && data.redirect) {

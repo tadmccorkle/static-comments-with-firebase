@@ -12,43 +12,36 @@ const schema = {
   allowedOrigins: {
     doc: 'When allowedOrigins is defined, only requests sent from one of the domains listed will be accepted.',
     docExample: 'allowedOrigins: ["localhost", "eduardoboucas.com"]',
-    default: [],
-    format: Array
-  },
-  auth: {
-    required: {
-      doc: 'Whether authentication is required for an entry to be accepted.',
-      format: Boolean,
-      default: false
-    }
+    format: Array,
+    default: []
   },
   branch: {
-    doc: 'Name of the branch being used within the GitHub repository.',
+    doc: 'Name of the branch being used for site deployments in the repository.',
     format: String,
     default: 'master'
   },
   commitMessage: {
-    doc: 'Text to be used as the commit message when pushing entries to the GitHub repository.',
+    doc: 'Text to be used as the commit message when pushing entries to the repository.',
     format: String,
     default: 'Add Comment Bot data'
   },
   extension: {
-    doc: 'The extension to be used in the generated data files (defaults to the extension associated with the `format` field)',
+    doc: 'The extension to be used in the generated data files (defaults to the extension associated with the `format` field).',
     format: String,
     default: ''
   },
   filename: {
-    doc: 'Name for the data files being uploaded to the repository. You can use placeholders (denoted by curly braces), which will be dynamically replaced with the content of a field (e.g. `{fields.name}`), the content of an option (e.g. `{options.slug}`) or other dynamic placeholders such as the entry\'s unique id (`{@id}`).',
+    doc: 'Name for the data files uploaded to the repository. You can use placeholders (denoted by curly braces), which will be dynamically replaced with the content of a field (e.g. `{fields.name}`), the content of an option (e.g. `{options.slug}`), or other dynamic placeholders such as the entry\'s unique id (`{@id}`).',
     format: String,
     default: ''
   },
   format: {
-    doc: 'Format of the data files being uploaded to the repository.',
+    doc: 'Format of the data files uploaded to the repository.',
     format: ['yaml', 'yml', 'json', 'frontmatter'],
     default: 'yml'
   },
   generatedFields: {
-    doc: 'List of fields to be appended to entries automatically. It consists of an object where keys correspond to the names of the fields being created and values being of mixed type. If values are objects, Comment Bot will look for a `type` and `options` keys inside and perform different operations based on their type; otherwise, the value will be used directly as the content of the generated field.',
+    doc: 'List of fields to be appended to entries automatically. It consists of an object where keys correspond to the names of the fields being created and values being of mixed type. If values are objects, Comment Bot will look for `type` and `options` keys inside and perform different operations based on their type; otherwise, the value will be used directly as the content of the generated field.',
     docExample: 'generatedFields:\n  someField: "some string" # Simple field (string)\n  date: # Extended field (date)\n    type: date\n    options:\n      format: "timestamp-seconds"',
     format: Object,
     default: {}
@@ -58,12 +51,6 @@ const schema = {
     format: Boolean,
     default: true
   },
-  name: {
-    doc: 'Human-friendly name of the property/website. This is used in notification emails.',
-    docExample: 'name: "My awesome blog"',
-    format: String,
-    default: ''
-  },
   notifications: {
     enabled: {
       doc: 'Whether email notifications are enabled. This allows users to subscribe to future comments on a thread. A [Mailgun](http://mailgun.com) account is required.',
@@ -71,12 +58,17 @@ const schema = {
       default: false
     },
     apiKey: {
-      doc: 'Mailgun API key',
+      doc: 'Mailgun API key.',
       format: 'EncryptedString',
       default: null
     },
+    commentSectionID: {
+      doc: 'HTML ID attribute of the comment section. Notification emails link directly to the comment section if an ID is provided.',
+      format: String,
+      default: ''
+    },
     domain: {
-      doc: 'Mailgun domain',
+      doc: 'Mailgun domain.',
       format: 'EncryptedString',
       default: null
     },
@@ -85,10 +77,16 @@ const schema = {
       format: String,
       default: '',
       env: 'EMAIL_FROM'
+    },
+    name: {
+      doc: 'Human-friendly name of the website used in notification emails.',
+      docExample: 'name: "My awesome blog"',
+      format: String,
+      default: ''
     }
   },
   path: {
-    doc: 'Path to the directory where entry files are stored. You can use placeholders (denoted by curly braces), which will be dynamically replaced with the content of a field (e.g. `{fields.name}`), the content of an option (e.g. `{options.slug}`) or other dynamic placeholders such as the entry\'s unique id (`{@id}`).',
+    doc: 'Path to the directory where entry files are stored. You can use placeholders (denoted by curly braces), which will be dynamically replaced with the content of a field (e.g. `{fields.name}`), the content of an option (e.g. `{options.slug}`), or other dynamic placeholders such as the entry\'s unique id (`{@id}`).',
     format: String,
     default: '_data/results/{@timestamp}'
   },
@@ -98,15 +96,9 @@ const schema = {
     default: 'Dear human,\n\nHere\'s a new entry for your approval.\n\nMerge the pull request to accept it, or close it to send it away.\n\n-Comment Bot\n\n---\n'
   },
   requiredFields: {
-    doc: 'An array with the names of the fields that must be supplies as part of an entry. If any of these is not present, the entry will be discarded and an error will be thrown.',
+    doc: 'An array with the names of the fields that must be supplied as part of an entry. If any of these is not present, the entry will be discarded and an error will be thrown.',
     format: Array,
     default: []
-  },
-  transforms: {
-    doc: 'List of transformations to be applied to any of the fields supplied. It consists of an object where keys correspond to the names of the fields being transformed. The value determines the type of transformation being applied.',
-    docExample: 'transforms:\n  email: "md5" # The email field will be MD5-hashed',
-    format: Object,
-    default: {}
   },
   reCaptcha: {
     enabled: {
@@ -124,9 +116,22 @@ const schema = {
       format: 'EncryptedString',
       default: ''
     }
-  }
+  },
+  transforms: {
+    doc: 'List of transformations to be applied to any of the fields supplied. It consists of an object where keys correspond to the names of the fields being transformed. The value determines the type of transformation being applied.',
+    docExample: 'transforms:\n  email: "md5" # The email field will be MD5-hashed',
+    format: Object,
+    default: {}
+  },
 
   // not used with current implementation - may be used in future
+  // auth: {
+  //   required: {
+  //     doc: 'Whether authentication is required for an entry to be accepted.',
+  //     format: Boolean,
+  //     default: false
+  //   }
+  // },
   // githubAuth: {
   //   clientId: {
   //     doc: 'The client ID to the GitHub Application used for GitHub OAuth.',
@@ -139,7 +144,7 @@ const schema = {
   //     default: null
   //   },
   //   redirectUri: {
-  //     doc: 'The URL to redirect to after authenticating with GitHub.',
+  //     doc: 'The URI to redirect to after authenticating with GitHub.',
   //     format: String,
   //     default: ''
   //   }
@@ -149,7 +154,7 @@ const schema = {
 module.exports = (data, rsa) => {
   convict.addFormat({
     name: 'EncryptedString',
-    validate: val => true,
+    validate: () => true,
     coerce: val => {
       return rsa.decrypt(val, 'utf8');
     }

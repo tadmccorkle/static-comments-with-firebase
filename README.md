@@ -1,8 +1,8 @@
-# static-comments-with-firebase
+# Comment Bot - static-comments-with-firebase
 
-A Firebase-hosted implementation of [Eduardo Boucas's Staticman](https://staticman.net/).
+An implementation of [Eduardo Boucas's Staticman](https://staticman.net/) to be hosted with Firebase.
 
-I made some minor changes and updated some deprecated code for hosting my own Staticman server with Firebase. This gives me a more reliable version of Staticman for my projects (not that Staticman is poorly made, but that it is used by so many different websites right now).
+I made some minor changes, removed a few features I don't need, and updated some deprecated code for hosting my own Staticman server with Firebase.
 
 ## Using with your own projects
 
@@ -48,7 +48,7 @@ After completing each step above, create a file called _config.production.json_ 
 }
 ```
 
-The webhookSecret is optional - set it up if you want to ensure the requests to your webhook URL are valid (see the next section, GitHub Pages Implementation, for more information). Remove it from the configuration file if you are not using it. If you want to test out development configurations without modifying your production configuration, just be sure to set your environment variable, `NODE_ENV`, appropriately.
+The webhookSecret is optional - set it up if you want to ensure the requests to your webhook URL are valid (see the next section, [GitHub Pages Implementation](#github-pages-implementation), for more information). Remove it from the configuration file if you are not using it. If you want to test out development configurations without modifying your production configuration, just be sure to set your environment variable, `NODE_ENV`, appropriately.
 
 If you haven't done so yet, install _firebase-tools_:
 
@@ -83,9 +83,9 @@ If your site repo is not owned by the user with the personal access token used a
 
 Add a *_comment-bot.yml* file to your GitHub Pages repo's root directory. Example contents can be found in *_comment-bot.example-yml* within this repo. The contents of this file are based off the _siteConfig.js_ server file. Be sure to encrypt the appropriate fields with your app so your RSA private key is used.
 
-If using Mailgun for notifications, you must register a Mailgun account, set up a domain, and add your encrypted API key and domain to your *_comment-bot.yml* file. I provided Mailgun with payment information to avoid any issues - just be sure to set your limits to values within free tier.
+If using Mailgun for notifications, you must register a Mailgun account, set up a domain, and add your encrypted API key and domain to your *_comment-bot.yml* file. I provided Mailgun with payment information to avoid any issues - just be sure to set your limits to values within the free tier if you want to avoid payments.
 
-If using Google's Recaptcha to prevent spam, note that the current Comment Bot implementation uses RecaptchaV2. Your RecaptchaV2 site key and encrypted secret must be in your *_config.yml* (the configuration file for all Jekyll sites) and *_comment-bot.yml* files. They should be as follows in our *_config.yml* file:
+If using Google's reCAPTCHA to prevent spam, note that the current Comment Bot implementation uses RecaptchaV2. Your RecaptchaV2 site key and encrypted secret must be in your *_config.yml* (the configuration file for all Jekyll sites) and *_comment-bot.yml* files. They should be as follows in your *_config.yml* file:
 
 ```yml
 reCaptcha
@@ -93,7 +93,7 @@ reCaptcha
   secret: "YOUR_ENCRYPTED_SECRET"
 ```
 
-Your comment form should specify the appropriate options and fields input elements. See [tadmccorkle.com's comment form](https://github.com/tadmccorkle/tadmccorkle.github.io/blob/master/_includes/comment-form.html) as an example.
+Your comment form should specify the appropriate options and fields input elements. See [tadmccorkle.com's comment form](https://github.com/tadmccorkle/tadmccorkle.github.io/blob/master/_includes/comment-form.html) as an example. For other examples, refer to [Helpful Resources](#helpful-resources) below.
 
 A webhook should be set up for your repo if you want to use notifications and auto-branch-deletion. From your repo's Settings > Webhooks page, set the Payload URL as *YOUR_FIREBASE_APP_URL/webhook*. Set the Content type to _application/json_. Add a secret if you want to ensure requests to the payload URL are valid webhook events. Schedule the individual "Pull requests" event as the trigger for the webhook.
 
@@ -117,8 +117,10 @@ See the following for help with Staticman/Comment Bot:
 - [Firebase functions video tutorial](https://www.youtube.com/watch?v=LOeioOKUKI8)
 - [Firebase functions documentation](https://firebase.google.com/docs/functions)
 
-Do note that my current implementation does not have all Staticman features (ex. Askimet Spam Protection).
-
 ## Are you using this?
 
 If so, [let me know](mailto:tad.mccorkle+UsingCommentBot@gmail.com)!
+
+## Many thanks!
+
+To [Eduardo Boucas](https://eduardoboucas.com/) for his excellent work on Staticman!

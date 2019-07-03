@@ -274,14 +274,18 @@ CommentBot.prototype._resolvePlaceholders = function (subject, baseObject) {
 };
 
 CommentBot.prototype._initializeSubscriptions = function () {
-  if (!this.siteConfig.get('notifications.enabled')) return null;
-
   const mailgun = Mailgun({
     apiKey: this.siteConfig.get('notifications.apiKey') || config.get('email.apiKey'),
     domain: this.siteConfig.get('notifications.domain') || config.get('email.domain')
   });
 
   return new SubscriptionsManager(this.parameters, this.git, mailgun);
+};
+
+CommentBot.prototype._initializeNotificationSubscriptions = function () {
+  if (!this.siteConfig.get('notifications.enabled')) return null;
+
+  return this._initializeSubscriptions();
 };
 
 CommentBot.prototype._validateConfig = function (config) {
@@ -307,8 +311,6 @@ CommentBot.prototype._validateConfig = function (config) {
   if (missingFields.length) {
     return this.logAndGetError(`Missing fields - ${missingFields}`);
   }
-
-  this.siteConfig = SiteConfig(config, this.rsa);
 
   return null;
 };
@@ -352,8 +354,8 @@ CommentBot.prototype.getParameters = function () {
   return this.parameters;
 };
 
-CommentBot.prototype.getSiteConfig = function (force) {
-  if (this.siteConfig && !force) {
+CommentBot.prototype.getSiteConfig = function (validateConfig = true) {
+  if (this.siteConfig) {
     return Promise.resolve(this.siteConfig);
   }
 
@@ -363,14 +365,18 @@ CommentBot.prototype.getSiteConfig = function (force) {
 
   return this.git.readFile(this.configPath.file).then(data => {
     const config = objectPath.get(data, this.configPath.path);
-    const validationErrors = this._validateConfig(config);
+    if (validateConfig) {
+      const validationErrors = this._validateConfig(config);
 
-    if (validationErrors) {
-      return Promise.reject(validationErrors);
+      if (validationErrors) {
+        return Promise.reject(validationErrors);
+      }
     }
 
+    this.siteConfig = SiteConfig(config, this.rsa);
+
     if (config.branch !== this.parameters.branch) {
-      return Promise.reject(this.logAndGetError('Branch mismatch.'));
+      return Promise.reject(this.logAndGetError(`Branch mismatch: ${config.branch} ::: ${this.parameters.branch}`));
     }
 
     return this.siteConfig;
@@ -397,7 +403,7 @@ CommentBot.prototype.processEntry = function (fields, options) {
     return this._createFile(extendedFields);
   }).then(data => {
     const filePath = this._getNewFilePath(fields);
-    const subscriptions = this._initializeSubscriptions();
+    const subscriptions = this._initializeNotificationSubscriptions();
     const commitMessage = this._resolvePlaceholders(this.siteConfig.get('commitMessage'), {
       fields,
       options
@@ -446,11 +452,26 @@ CommentBot.prototype.processMerge = function (fields, options) {
   this.options = Object.assign({}, options);
 
   return this.getSiteConfig().then(() => {
-    const subscriptions = this._initializeSubscriptions();
+    const subscriptions = this._initializeNotificationSubscriptions();
 
     return subscriptions.send(options.parent, options, this.siteConfig);
   }).catch(error => {
     console.error('Error processing merge:', error.message);
+    return Promise.reject(error);
+  });
+};
+
+CommentBot.prototype.processEmail = function (fields, options) {
+  this.fields = Object.assign({}, fields);
+  this.options = Object.assign({}, options);
+
+  return this.getSiteConfig(false).then(() => {
+    const subscriptions = this._initializeSubscriptions();
+    const email = this.fields['email'];
+    const listAddress = this.siteConfig.get('mailingList');
+    return subscriptions.addSiteSubscription(email, listAddress);
+  }).catch(error => {
+    console.error('Error processing email:', error.message);
     return Promise.reject(error);
   });
 };

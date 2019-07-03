@@ -3,6 +3,12 @@
 const convict = require('convict');
 
 const schema = {
+  allowedOrigins: {
+    doc: 'When allowedOrigins is defined, only submissions sent from one of the domains listed will be accepted.',
+    docExample: 'allowedOrigins: ["localhost", "eduardoboucas.com"]',
+    format: Array,
+    default: ['*']
+  },
   email: {
     apiKey: {
       doc: 'Mailgun API key to be used for email notifications. Will be overridden by a `notifications.apiKey` parameter in the site config, if one is set.',

@@ -19,7 +19,8 @@ comments: # *
       options:
         format: "iso8601"
 
-  allowedOrigins: ["YOUR.SITE"]
+  mailingList: "YOUR_MAILGUN_MAILING_LIST_NAME"
+
   notifications:
     enabled: true
     apiKey: "YOUR_ENCRYPTED_API_KEY" # *!

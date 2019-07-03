@@ -9,12 +9,6 @@ const schema = {
     format: Array,
     default: []
   },
-  allowedOrigins: {
-    doc: 'When allowedOrigins is defined, only requests sent from one of the domains listed will be accepted.',
-    docExample: 'allowedOrigins: ["localhost", "eduardoboucas.com"]',
-    format: Array,
-    default: []
-  },
   branch: {
     doc: 'Name of the branch being used for site deployments in the repository.',
     format: String,
@@ -45,6 +39,11 @@ const schema = {
     docExample: 'generatedFields:\n  someField: "some string" # Simple field (string)\n  date: # Extended field (date)\n    type: date\n    options:\n      format: "timestamp-seconds"',
     format: Object,
     default: {}
+  },
+  mailingList: {
+    doc: 'Mailgun mailing list name for this site.',
+    format: String,
+    default: ''
   },
   moderation: {
     doc: 'When set to `true`, a pull request with the data files will be created to allow site administrators to approve or reject an entry. Otherwise, entries will be pushed to `branch` immediately.',

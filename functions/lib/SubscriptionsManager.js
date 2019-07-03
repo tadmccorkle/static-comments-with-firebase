@@ -16,11 +16,9 @@ SubscriptionsManager.prototype._getListAddress = function (entryId) {
   return `${compoundId}@${this.mailAgent.domain}`;
 };
 
-SubscriptionsManager.prototype._get = function (entryId) {
-  const listAddress = this._getListAddress(entryId);
-
+SubscriptionsManager.prototype._get = function (list) {
   return new Promise((resolve, reject) => {
-    this.mailAgent.lists(listAddress).info((error, value) => {
+    this.mailAgent.lists(list).info((error, value) => {
       if (error && (error.statusCode !== 404)) {
         return reject(error);
       }
@@ -29,13 +27,19 @@ SubscriptionsManager.prototype._get = function (entryId) {
         return resolve(null);
       }
 
-      return resolve(listAddress);
+      return resolve(list);
     });
   });
 };
 
+SubscriptionsManager.prototype._getFromEntryId = function (entryId) {
+  const listAddress = this._getListAddress(entryId);
+
+  return this._get(listAddress);
+};
+
 SubscriptionsManager.prototype.send = function (entryId, options, siteConfig) {
-  return this._get(entryId).then(list => {
+  return this._getFromEntryId(entryId).then(list => {
     if (list) {
       const notifications = new Notification(this.mailAgent);
 
@@ -55,7 +59,42 @@ SubscriptionsManager.prototype.set = function (entryId, email) {
   return new Promise((resolve, reject) => {
     let queue = [];
 
-    return this._get(entryId).then(list => {
+    return this._getFromEntryId(entryId).then(list => {
+      if (!list) {
+        queue.push(new Promise((resolve, reject) => {
+          this.mailAgent.lists().create({
+            address: listAddress
+          }, (error, result) => {
+            if (error) {
+              return reject(error);
+            }
+
+            return resolve(result);
+          });
+        }));
+      }
+
+      // eslint-disable-next-line promise/no-nesting
+      return Promise.all(queue).then(() => {
+        return this.mailAgent.lists(listAddress).members().create({
+          address: email
+        }, (error, result) => {
+          if (error && (error.statusCode !== 400)) {
+            return reject(error);
+          }
+
+          return resolve(result);
+        });
+      });
+    });
+  });
+};
+
+SubscriptionsManager.prototype.addSiteSubscription = function (email, listAddress) {
+  return new Promise((resolve, reject) => {
+    let queue = [];
+
+    return this._get(listAddress).then(list => {
       if (!list) {
         queue.push(new Promise((resolve, reject) => {
           this.mailAgent.lists().create({

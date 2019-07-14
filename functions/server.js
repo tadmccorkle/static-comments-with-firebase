@@ -91,7 +91,7 @@ API.prototype.initializeRoutes = function () {
     this.controllers.encrypt
   );
 
-  // limit 5 comment submissions per IP per minute
+  // limit 5 comment submissions per IP per minute (default)
   this.server.use('/entry/', rateLimit());
   this.server.post(
     '/entry/:username/:repository/:branch/:property',
@@ -99,11 +99,11 @@ API.prototype.initializeRoutes = function () {
     this.controllers.process
   );
 
-  // limit 5 subscriptions per IP per hour
-  // this.server.use('/email/', rateLimit({
-  //   windowMs: 60 * 60 * 1000,
-  //   max: 5
-  // }));
+  // limit 5 subscriptions per IP per minute
+  this.server.use('/email/', rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 5
+  }));
   this.server.post(
     '/email/:username/:repository/:branch/:property',
     this.postCors,

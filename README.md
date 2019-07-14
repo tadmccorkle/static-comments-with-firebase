@@ -109,7 +109,7 @@ Done! You should now be able to POST comments to *YOUR_FIREBASE_APP/__entry__/GI
 
 #### Site Mailing Lists
 
-If your *comment-bot.yml* file contains your encrypted Mailgun API key, encrypted Mailgun domain, and encrypted Mailgun mailing list name, you can use add emails to your mailing list with a POST to *YOUR_FIREBASE_APP/__email__/GITHUB_PAGES_REPO_OWNER/GITHUB_PAGES_REPO/GITHUB_PAGES_DEPLOYMENT_BRANCH/comments*. Like comment submissions, Google's reCAPTCHA V2 can be used to prevent spam. You will be responsible for sending emails to the mailing list.
+If your *comment-bot.yml* file contains your encrypted Mailgun API key, encrypted Mailgun domain, and encrypted Mailgun mailing list name, you can use add emails to your mailing list with a POST to *YOUR_FIREBASE_APP/__email__/GITHUB_PAGES_REPO_OWNER/GITHUB_PAGES_REPO/GITHUB_PAGES_DEPLOYMENT_BRANCH/comments*. No spam protection is used for this portion of the API other than rate limiting. You will be responsible for sending emails to the mailing list.
 
 [Let me know](mailto:tad.mccorkle+CommentBotTutorial@gmail.com), or create a pull request, if I left anything important out of the instructions above.
 

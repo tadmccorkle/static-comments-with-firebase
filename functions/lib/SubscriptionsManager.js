@@ -2,6 +2,7 @@
 
 const md5 = require('md5');
 
+const config = require('./../config');
 const Notification = require('./Notification');
 
 const SubscriptionsManager = function (parameters, dataStore, mailAgent) {
@@ -10,8 +11,8 @@ const SubscriptionsManager = function (parameters, dataStore, mailAgent) {
   this.mailAgent = mailAgent;
 };
 
-SubscriptionsManager.prototype._getListAddress = function (entryId) {
-  const compoundId = md5(`${this.parameters.username}-${this.parameters.repository}-${entryId}`);
+SubscriptionsManager.prototype._getListAddress = function (entryIdHash) {
+  const compoundId = md5(`${this.parameters.username}-${this.parameters.repository}-${entryIdHash}`);
 
   return `${compoundId}@${this.mailAgent.domain}`;
 };
@@ -32,14 +33,34 @@ SubscriptionsManager.prototype._get = function (list) {
   });
 };
 
-SubscriptionsManager.prototype._getFromEntryId = function (entryId) {
-  const listAddress = this._getListAddress(entryId);
+SubscriptionsManager.prototype._getFromEntryId = function (entryIdHash) {
+  const listAddress = this._getListAddress(entryIdHash);
 
   return this._get(listAddress);
 };
 
+SubscriptionsManager.prototype.sendConfirmationRequest = function (parameters, email, siteConfig) {
+  const notifications = new Notification(this.mailAgent);
+
+  return notifications.sendConfirmationRequest(parameters, email, {
+    siteName: siteConfig.get('notifications.name'),
+    fromAddress: siteConfig.get('notifications.fromAddress')
+  });
+};
+
+SubscriptionsManager.prototype.sendConfirmationRequestForEntry = function (parameters, email, entry, siteConfig) {
+  const notifications = new Notification(this.mailAgent);
+
+  return notifications.sendConfirmationRequestForEntry(parameters, email, entry, {
+    siteName: siteConfig.get('notifications.name'),
+    fromAddress: siteConfig.get('notifications.fromAddress')
+  });
+};
+
 SubscriptionsManager.prototype.send = function (entryId, options, siteConfig) {
-  return this._getFromEntryId(entryId).then(list => {
+  const entryIdHash = md5(entryId);
+
+  return this._getFromEntryId(entryIdHash).then(list => {
     if (list) {
       const notifications = new Notification(this.mailAgent);
 
@@ -53,13 +74,13 @@ SubscriptionsManager.prototype.send = function (entryId, options, siteConfig) {
   });
 };
 
-SubscriptionsManager.prototype.set = function (entryId, email) {
-  const listAddress = this._getListAddress(entryId);
+SubscriptionsManager.prototype.set = function (entryIdHash, email) {
+  const listAddress = this._getListAddress(entryIdHash);
 
   return new Promise((resolve, reject) => {
     let queue = [];
 
-    return this._getFromEntryId(entryId).then(list => {
+    return this._getFromEntryId(entryIdHash).then(list => {
       if (!list) {
         queue.push(new Promise((resolve, reject) => {
           this.mailAgent.lists().create({
@@ -123,6 +144,22 @@ SubscriptionsManager.prototype.addSiteSubscription = function (email, listAddres
       });
     });
   });
+};
+
+SubscriptionsManager.prototype.confirmEmail = function (email, emailHash, listAddress) {
+  if (md5(`${email}${config.get('emailHashSalt')}`) === emailHash) {
+    this.addSiteSubscription(email, listAddress);
+  } else {
+    throw Error('Email does not match hash.');
+  }
+};
+
+SubscriptionsManager.prototype.confirmEmailForEntry = function (entryHash, email, emailHash) {
+  if (md5(`${email}${config.get('emailHashSalt')}`) === emailHash) {
+    this.set(entryHash, email);
+  } else {
+    throw Error('Entry email does not match hash.');
+  }
 };
 
 module.exports = SubscriptionsManager;

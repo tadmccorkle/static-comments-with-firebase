@@ -21,7 +21,8 @@ const API = function () {
     encrypt: require('./controllers/encrypt'),
     handlePullRequest: require('./controllers/handlePullRequest'),
     process: require('./controllers/process'),
-    processEmail: require('./controllers/processEmail')
+    processEmail: require('./controllers/processEmail'),
+    confirmEmail: require('./controllers/confirmEmail')
   };
 
   const whitelist = [];
@@ -86,9 +87,31 @@ API.prototype.initializeRoutes = function () {
     this.controllers.home
   );
 
+  // limit 5 encryptions per IP per minute (default)
+  this.server.use('/encrypt/', rateLimit());
   this.server.get(
     '/encrypt/:text',
     this.controllers.encrypt
+  );
+
+  // limit 3 email confirmations per IP per minute
+  this.server.use('/confirm/', rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 3
+  }));
+  this.server.get(
+    '/confirm/:username/:repository/:branch/:property/:email/:emailhash',
+    this.controllers.confirmEmail
+  );
+
+  // limit 3 email confirmations per IP per minute
+  this.server.use('/confirmForEntry/', rateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 3
+  }));
+  this.server.get(
+    '/confirmForEntry/:username/:repository/:branch/:property/:entry/:email/:emailhash',
+    this.controllers.confirmEmail
   );
 
   // limit 5 comment submissions per IP per minute (default)

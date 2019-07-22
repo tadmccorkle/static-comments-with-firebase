@@ -411,9 +411,7 @@ CommentBot.prototype.processEntry = function (fields, options) {
 
     if (subscriptions && options.parent && options.subscribe && this.fields[options.subscribe]) {
       // eslint-disable-next-line promise/no-nesting
-      subscriptions.set(options.parent, this.fields[options.subscribe]).catch(error => {
-        console.error('Error setting subscriptions:', error.message);
-      });
+      subscriptions.sendConfirmationRequestForEntry(this.parameters, this.fields[options.subscribe], options.parent, this.siteConfig);
     }
 
     if (this.siteConfig.get('moderation')) {
@@ -468,10 +466,30 @@ CommentBot.prototype.processEmail = function (fields, options) {
   return this.getSiteConfig(false).then(() => {
     const subscriptions = this._initializeSubscriptions();
     const email = this.fields['email'];
-    const listAddress = this.siteConfig.get('mailingList');
-    return subscriptions.addSiteSubscription(email, listAddress);
+    return subscriptions.sendConfirmationRequest(this.parameters, email, this.siteConfig);
   }).catch(error => {
     console.error('Error processing email:', error.message);
+    return Promise.reject(error);
+  });
+};
+
+CommentBot.prototype.confirmEmail = function(email, emailHash) {
+  return this.getSiteConfig(false).then(() => {
+    const subscriptions = this._initializeSubscriptions();
+    const listAddress = this.siteConfig.get('mailingList');
+    return subscriptions.confirmEmail(email, emailHash, listAddress);
+  }).catch(error => {
+    console.error('Error confirming email:', error.message);
+    return Promise.reject(error);
+  });
+};
+
+CommentBot.prototype.confirmEmailForEntry = function(entryHash, email, emailHash) {
+  return this.getSiteConfig(false).then(() => {
+    const subscriptions = this._initializeSubscriptions();
+    return subscriptions.confirmEmailForEntry(entryHash, email, emailHash);
+  }).catch(error => {
+    console.error('Error confirming email for entry:', error.message);
     return Promise.reject(error);
   });
 };

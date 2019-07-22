@@ -3,6 +3,8 @@
     "YOUR.DOMAIN",
     "localhost:4000"
   ],
+  "apiOrigin": "https://YOUR_APP.firebaseapp.com",
+  "emailHashSalt": "YOUR_SALT_STRING",
   "webhookSecret": "YOUR_WEBHOOK_KEY",
   "githubToken": "YOUR_GITHUB_TOKEN",
   "rsaPrivateKey": "YOUR_RSA_PRIVATE_KEY"

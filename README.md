@@ -46,6 +46,8 @@ After completing each step above, create a file called _config.production.json_ 
     "YOUR.DOMAIN",
     "localhost:4000"
   ],
+  "apiOrigin": "https://YOUR_APP.firebaseapp.com",
+  "emailHashSalt": "YOUR_SALT_STRING",
   "webhookSecret": "YOUR_WEBHOOK_KEY",
   "githubToken": "YOUR_GITHUB_TOKEN",
   "rsaPrivateKey": "YOUR_RSA_PRIVATE_KEY"
@@ -53,6 +55,8 @@ After completing each step above, create a file called _config.production.json_ 
 ```
 
 The allowed origins are the origins from which you want to process comment submissions. Staticman had this in the siteConfig, but it was easier for me to implement this way. You must include your submission origins for Comment Bot to work correctly. Do **not** include _https://_ or _http://_ in your allowed origins. The API will handle both cases.
+
+If you want to use post notifications (a little more information in the section [GitHub Pages Implementation](#github-pages-implementation) below) or a site email list (see [Site Mailing Lists](#site-mailing-lists) below for more information), include your Firebase app's origin and a hash salt string.
 
 The webhookSecret is optional - set it up if you want to ensure the requests to your webhook URL are valid (see the next section, [GitHub Pages Implementation](#github-pages-implementation), for more information). Remove it from the configuration file if you are not using it. If you want to test out development configurations without modifying your production configuration, just be sure to set your environment variable, `NODE_ENV`, appropriately.
 
@@ -109,9 +113,13 @@ Done! You should now be able to POST comments to *YOUR_FIREBASE_APP/__entry__/GI
 
 #### Site Mailing Lists
 
-If your *comment-bot.yml* file contains your encrypted Mailgun API key, encrypted Mailgun domain, and encrypted Mailgun mailing list name, you can use add emails to your mailing list with a POST to *YOUR_FIREBASE_APP/__email__/GITHUB_PAGES_REPO_OWNER/GITHUB_PAGES_REPO/GITHUB_PAGES_DEPLOYMENT_BRANCH/comments*. No spam protection is used for this portion of the API other than rate limiting. You will be responsible for sending emails to the mailing list.
+If your *comment-bot.yml* file contains your encrypted Mailgun API key, encrypted Mailgun domain, and encrypted Mailgun mailing list name, you can add emails to your mailing list with a POST to *YOUR_FIREBASE_APP/__email__/GITHUB_PAGES_REPO_OWNER/GITHUB_PAGES_REPO/GITHUB_PAGES_DEPLOYMENT_BRANCH/comments*. You need to include an `apiOrigin` and `emailHashSalt` in your private configuration file. No spam protection is used for this portion of the API other than rate limiting. You will be responsible for sending emails to the mailing list.
 
 [Let me know](mailto:tad.mccorkle+CommentBotTutorial@gmail.com), or create a pull request, if I left anything important out of the instructions above.
+
+### Double Opt-In
+
+This API currently only supports double opt-in for email lists, so a confirmation email is sent when someone subscribes to the site mailing list or requests notification emails on a post.
 
 ## Helpful Resources
 

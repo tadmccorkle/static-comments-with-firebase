@@ -9,6 +9,20 @@ const schema = {
     format: Array,
     default: ['*']
   },
+  apiOrigin: {
+    doc: 'The origin of this firebase functions API.',
+    docExample: 'https://your-app.firebaseapp.com',
+    format: String,
+    default: '',
+    env: 'API_ORIGIN'
+  },
+  emailHashSalt: {
+    doc: 'The salt to be used in the hash for email verifications.',
+    docExample: 'YOUR_EMAIL_KEY',
+    format: String,
+    default: '',
+    env: 'HASH_SALT'
+  },
   email: {
     apiKey: {
       doc: 'Mailgun API key to be used for email notifications. Will be overridden by a `notifications.apiKey` parameter in the site config, if one is set.',
